@@ -30,8 +30,8 @@ These tables were produced by `src/invasive_clf/data/build_dataset.py` (settings
 and Cal-IPC lists, with their iNaturalist taxon ids and observation counts. `classifier_label` gives the starting label
 (`invasive`, `noxious only`, `native, noxious`); `src/invasive_clf/data/label_policy.py` holds the team's exceptions.
 
-They were made by two notebooks: `notebooks/01_build_species_lists.ipynb` (the published lists, entered by hand, and
-the labeling rule) and `notebooks/02_inat_counts.ipynb` (iNaturalist taxon ids and observation counts).
+They were made by two notebooks: `notebooks/data/01_build_species_lists.ipynb` (the published lists, entered by hand, and
+the labeling rule) and `notebooks/data/02_inat_counts.ipynb` (iNaturalist taxon ids and observation counts).
 
 ## Getting the images
 
