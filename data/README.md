@@ -36,6 +36,7 @@ the labeling rule) and `notebooks/data/04_inat_counts.ipynb` (iNaturalist taxon 
 ## Getting the images
 
 ```bash
+pip install -e .                               # once, from the repository root: makes invasive_clf importable
 python -m invasive_clf.data.download_images
 ```
 

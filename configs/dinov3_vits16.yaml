@@ -1,0 +1,58 @@
+# Final fine-tuned model: DINOv3 ViT-S/16, run 04_pool_cls_patchmean of notebook 11.
+#
+# These are the hyperparameters that 18_final_model_comparison.ipynb wrote to final_models.json for this run and that
+# 19_final_evaluation.ipynb trained on train + val. They are the starting configuration of the experiment template
+# (notebooks 05 to 13) plus the two changes accepted in notebook 11:
+#   02_frozen_epochs_8     frozen_epochs 3 -> 8
+#   04_pool_cls_patchmean  backbone_kwargs.pooling "cls" -> "cls+patchmean"
+# Used by:  python -m invasive_clf.train_dinov3 --config configs/dinov3_vits16.yaml
+
+model_name: dinov3_vits16          # facebook/dinov3-vits16-pretrain-lvd1689m (gated on Hugging Face; see models/backbones.py)
+
+# --- input and augmentation ---
+image_size: 224                    # network input, 224 x 224
+presize: 256                       # training photos: shorter side resized to 256 (aspect ratio kept), then a random crop
+rrc_scale: [0.75, 1.0]             # RandomResizedCrop(224, scale=rrc_scale)
+hflip_p: 0.5                       # horizontal flip probability
+rotation_deg: 15                   # RandomRotation(+-15 degrees)
+color_jitter: {brightness: 0.15, contrast: 0.15, saturation: 0.15, hue: 0.02}
+val_resize: 256                    # scoring: Resize(256) then CenterCrop(224)
+batch_size: 64
+num_workers: 2
+
+# --- architecture: backbone -> pooled features -> dropout -> linear (40 outputs) ---
+dropout: 0.1
+backbone_kwargs:
+  pooling: cls+patchmean           # CLS token + mean of the patch tokens = 768-d features   [accepted in 04_pool_cls_patchmean]
+  drop_path_rate: 0.0              # stochastic depth inside the ViT blocks (off)
+
+# --- stage 1: backbone frozen, only the head trains, constant learning rate ---
+frozen_epochs: 8                   #                                                          [accepted in 02_frozen_epochs_8]
+frozen_head_lr: 1.0e-3
+
+# --- stage 2: full fine-tuning, AdamW with a 1-cycle cosine schedule ---
+full_epochs: 20
+backbone_lr: 2.0e-5                # peak learning rate of the backbone
+head_lr: 3.0e-4                    # peak learning rate of the head
+pct_start: 0.1                     # share of the stage spent warming up
+weight_decay: 0.01
+weight_decay_exclude_1d: true      # no weight decay on biases, norm parameters and the CLS/register/mask tokens
+layer_decay: null                  # layer-wise learning-rate decay (off)
+grad_clip_norm: 1.0
+amp: true                          # mixed precision on a GPU (bf16 if supported, else fp16)
+
+# --- loss and regularization ---
+loss: bce                          # BCEWithLogitsLoss over the 40 invasive outputs; not_invasive = all-zero target
+bce_pos_weight: null               # plain BCE
+label_smoothing: 0.0
+mixup_alpha: 0.0                   # MixUp off
+
+# --- evaluation ---
+select_metric: macro_f1_invasive   # --validate: epoch selection and threshold tuning target
+tta_hflip: true                    # score each photo and its mirror image, average the logits
+threshold: 0.14                    # threshold tuned on val by the validation run (best epoch, with TTA); used by the
+                                   # final train + val model, which has no held-out set to tune its own
+
+# --- bookkeeping ---
+seed: 42
+max_batches_per_epoch: null        # e.g. 5 for a quick check of the pipeline

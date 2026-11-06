@@ -1,0 +1,24 @@
+# Downloaded images, API caches and the full metadata (rebuilt by the scripts in src/invasive_clf/data/)
+data/inat_dataset_final/
+
+# Model weights and image caches (hosted outside git; see README)
+*.pt
+*.pth
+*.joblib
+*.safetensors
+
+# Python / Jupyter
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/
+
+# Training and evaluation outputs (weights, histories, figures); results worth keeping are copied to results/
+runs/

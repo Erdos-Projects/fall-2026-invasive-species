@@ -24,7 +24,8 @@ for. To re-run one, point its data path at the image folder made by `src/invasiv
 
 ## `modeling_experiments/`: model search on the validation set
 
-All of these train on `train.csv` and are scored on `val.csv`. None of them reads `test.csv` or `test_unseen.csv`.
+Notebooks 05 to 18 train on `train.csv` and are scored on `val.csv`; none of them reads `test.csv` or `test_unseen.csv`.
+Notebook 19 is the only one that touches the test sets, once, after the two final models were chosen.
 
 Notebooks 05 to 13 fine-tune one pretrained backbone each. They are copies of one shared template: the same data,
 model, metric and training code, with a manual accept/reject log (`decisions.json`) for each change tried.
@@ -41,3 +42,4 @@ model, metric and training code, with a manual accept/reject log (`decisions.jso
 | `16_experiments_bioclip2_final_candidates.ipynb` | BioCLIP 2 candidates written in the common run format. `bioclip2_zeroshot_full` is the **final BioCLIP 2 model**. |
 | `17_logreg_baselines.ipynb` | Baselines: logistic regression on the frozen features of each backbone. |
 | `18_final_model_comparison.ipynb` | Compares every run on val and picks the two models that go to the test set. |
+| `19_final_evaluation.ipynb` | The one-shot test: retrains the DINOv3 model on train + val, scores `test.csv` and `test_unseen.csv` with both final models, and times them. |

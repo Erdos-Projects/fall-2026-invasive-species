@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "invasive_clf"
+version = "1.0.0"
+description = "Flag invasive plant species in iNaturalist photos of the Desert Southwest"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "pandas",
+    "scikit-learn",
+    "matplotlib",
+    "pyyaml",
+    "tqdm",
+    "pillow",
+    "requests",
+    "torch>=2.1",
+    "torchvision>=0.16",
+    "torchmetrics",
+    "transformers>=4.57.3",     # DINOv3 support
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
