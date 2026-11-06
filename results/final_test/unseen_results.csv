@@ -1,0 +1,3 @@
+series,model,photos,hold-out species,top-1 accuracy,flagged as invasive,species with at least one flag
+bioclip2,bioclip2_zeroshot_full/00_baseline,792,30,0.9709595959595959,23,7
+finetune,dinov3_vits16/04_pool_cls_patchmean,792,30,0.9179292929292929,65,15

@@ -1,0 +1,3 @@
+,label,candidate,params_M,top1_acc_all,macro_f1_invasive,ms_per_image,images_per_second,seconds_test_set,n_images,batch_size,tta_hflip,amp,peak_gpu_memory_GiB,device
+bioclip2,BioCLIP 2 ViT-L/14 (zero-shot),bioclip2_zeroshot_full/00_baseline,303.966208,0.9870129823684692,0.9399364590644836,147.92897824725765,6.760000723648197,1173.2247264790003,7931,128,True,True,3.7308783531188965,Tesla T4
+finetune,DINOv3 ViT-S/16 (fine-tuned),dinov3_vits16/04_pool_cls_patchmean,21.627304,0.9309040307998657,0.71625816822052,10.477491922456263,95.4426887084221,83.09698843700062,7931,128,True,True,1.0304617881774902,Tesla T4
