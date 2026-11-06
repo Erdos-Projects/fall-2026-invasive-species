@@ -1,0 +1,56 @@
+# Settings for src/invasive_clf/data/build_dataset.py (the iNaturalist query, class selection and split).
+# These are the values used to build the final dataset (run of 2026-11-01).
+#
+# Paths are relative to the repository root.
+
+paths:
+  ranked_dir: data/reference            # ranked_desert_sw.csv, ranked_full_bbox.csv (the species lists)
+  out_dir: data/inat_dataset_final      # everything build_dataset.py writes (not committed; see .gitignore)
+
+# ---- iNaturalist query ---------------------------------------------------------------------------------------
+place_id: 118341             # Desert Southwest Region (user-drawn polygon: AZ, NM, S Nevada, CA deserts, El Paso)
+cutoff: "2025-07-01"         # val/test rows only from uploads on/after this date (no pretrained model can have seen them)
+window_start: "2024-11-01"   # two years back, on upload date (created_at); rows before CUTOFF can only be train
+base_filters:                # applied to every observation query (created_d1 = window_start is added in code)
+  quality_grade: research
+  photos: "true"
+  photo_license: cc0,cc-by,cc-by-nc
+  captive: "false"
+  verifiable: "true"
+  obscured: "false"          # drop obscured/private coordinates (costs ~3% of the pool)
+  not_in_place: 6793         # Mexico: place 118341 dips a few km across the border (Mexicali, Ciudad Juárez)
+  locale: en
+per_page: 200
+request_pause: 1.0           # seconds between API calls (iNaturalist asks for <= ~1 request/second)
+user_agent: "invasive-species-detector/0.3 (Erdos Institute deep-learning project, fall 2026)"
+refresh: false               # true re-queries classes/counts that already have a cache file
+
+# ---- dataset design ------------------------------------------------------------------------------------------
+min_in_window: 50            # rows in the upload window a class needs (30 train + 10 val + 10 test)
+min_post_cutoff: 30          # of which uploaded on/after CUTOFF (val + test need 20 from eligible observers; slack for grouping)
+max_per_class: 400           # metadata rows fetched per class, newest upload first (2 pages)
+n_train: 30                  # train rows per class
+val_lo: 10                   # val rows per listed class, log-scaled by the class's in-window count ...
+val_hi: 50                   # ... between val_lo and val_hi
+test_lo: 10                  # test rows per listed class, same log scale
+test_hi: 50
+test_anchor: 2000            # in-window count that maps to test_hi (fixed, so the largest native does not set the scale)
+test_scale: log
+test_share: 0.40             # share of grouped observers' rows assigned to the test folds ...
+val_share: 0.20              # ... and to the val folds (rest: train)
+train_floor: 20              # a class short of n_train / its val quota is still kept (flagged "short") if it has at least
+val_floor: 6                 # this many rows (6 keeps Avena fatua, whose val folds hold six rows)
+n_splits: 20                 # StratifiedGroupKFold folds the shares are carved from
+split_seed_tries: 10         # fold draws tried (seed, seed+1, ...); the draw that drops the fewest invasive classes is kept
+eligibility: row             # "observer" (strict rule 3) or "row" (see split_rules.py)
+background_quota: [15, 5, 10, 30]   # per-class (train, val, test_lo, test_hi) for background (not_invasive) classes;
+                                    # null = same quotas as the invasive classes
+row_budget: 19950            # cap on projected train + val + test + test_unseen rows; background classes are added in
+                             # priority order until the projected total reaches it (null = no cap)
+background_flags: [native, introduced]   # iNaturalist establishment flags that define the background pool
+unseen_frac: 0.10            # share of the selected background classes held out as test_unseen ...
+unseen_max: 30               # ... at most this many
+drop_shortfall: true         # drop classes whose val/test cannot be filled (reported either way)
+stop_after_availability: false   # true: stop after the projected counts, before any observation is fetched
+seed: 42
+image_size: medium           # photo size in the URLs: square(75) small(240) medium(500) large(1024) original
