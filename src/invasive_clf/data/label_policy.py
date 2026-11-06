@@ -49,7 +49,7 @@ CALIPC_KEEP = ["Hordeum murinum", "Vinca major", "Avena fatua", "Stipa capensis"
 CALIPC_CONFIRM = ["Oxalis pes-caprae", "Mesembryanthemum crystallinum", "Foeniculum vulgare",
                   "Avena barbata", "Tanacetum vulgare", "Atriplex semibaccata", "Torilis arvensis"]
 
-# Names the list resolver (inat_counts.ipynb) could not match, fixed by hand (iNat taxon ids)
+# Names the list resolver (notebooks/data/04_inat_counts.ipynb) could not match, fixed by hand (iNat taxon ids)
 UNRESOLVED_FIX = {"Oenothera sinuosus": 78248,                 # typo for Oenothera sinuosa
                   "Physalis virginiana var. sonorae": 154825,  # Physalis virginiana
                   "Cucumis melo var. dudaim": 80640,           # the variety itself

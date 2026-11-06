@@ -33,10 +33,9 @@ A fine-tuned vision model that flags invasive plant species in iNaturalist photo
 │   ├── base.yaml             # initial configuration
 │   └── siglip2_base_final.yaml
 ├── notebooks/                # exploration and experiment logs (read in order)
-│   ├── 01_build_species_lists.ipynb
-│   ├── 02_inat_counts.ipynb
-│   ├── 03_experiments_siglip2.ipynb
-│   └── 04_results.ipynb
+│   ├── eda/                  # 01–02: preliminary dataset and exploratory analysis
+│   ├── data/                 # 03–04: species lists behind the dataset
+│   └── modeling_experiments/ # 05–18: model search on the validation set
 ├── src/invasive_clf/         # the pipeline
 │   ├── data/                 # species lists, download, dataset + transforms
 │   ├── models/               # backbones, classifier head
