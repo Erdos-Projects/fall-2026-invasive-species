@@ -113,3 +113,104 @@ def plot_per_class_f1(m: dict, invasive_classes: list, support: pd.Series, out_d
     ax.set_xlim(0, 1); ax.set_xlabel(f"F1 on {split} (at the threshold)"); ax.tick_params(axis="y", labelsize=7)
     ax.set_title(title or f"per-class F1; macro-F1 (invasive) = {m['macro_f1_invasive']:.3f}")
     fig.tight_layout(); _save(fig, out_dir, "per_class_f1.png")
+
+
+# ------------------------------------------------------------------------------------------------------------------
+# Test-set figures comparing the final models (Sections 2b, 11, 11b and 13 of 19_final_evaluation.ipynb). ``models`` is
+# a dict  key -> {"label": name shown in the legend, "color": hex}; the other dicts are keyed the same way.
+
+GROUP_ORDER = ["invasive", "native_background", "introduced_unlisted", "listed_not_invasive", "native_listed"]
+GROUP_LABELS = {"invasive": "invasive (one of the 40 classes)", "native_background": "not invasive: native background species",
+                "introduced_unlisted": "not invasive: introduced, not on the list", "listed_not_invasive": "not invasive: listed but not invasive here",
+                "native_listed": "not invasive: native, on a watch list", "holdout_unseen": "not invasive: hold-out species (unseen)"}
+GROUP_COLORS = {"invasive": "#eb6834", "native_background": "#2a78d6", "introduced_unlisted": "#9452d6",
+                "listed_not_invasive": "#2f9e6e", "native_listed": "#0e9bb8", "holdout_unseen": "#9a9995"}
+
+
+def plot_split_overview(split_overview: pd.DataFrame, class_counts: pd.DataFrame, n_unseen: int, out_dir: Path):
+    """Left: composition of each split by group. Right: photos per invasive class, train + val next to test."""
+    fig, axes = plt.subplots(1, 2, figsize=(13, 4.2), gridspec_kw={"width_ratios": [1, 1.6]})
+    ax = axes[0]
+    comp = split_overview.loc[["train", "val", "test"], GROUP_ORDER].T
+    comp["test_unseen"] = 0
+    comp.loc["holdout_unseen"] = [0, 0, 0, n_unseen]
+    shares = comp / comp.sum(axis=0)
+    bottom = np.zeros(shares.shape[1])
+    for g in shares.index:
+        ax.bar(shares.columns, shares.loc[g].values, bottom=bottom, color=GROUP_COLORS[g], label=GROUP_LABELS[g], width=0.65)
+        bottom += shares.loc[g].values
+    for i, n in enumerate(comp.sum(axis=0).values):
+        ax.text(i, 1.01, f"n = {int(n)}", ha="center", fontsize=8)
+    ax.set_ylim(0, 1.08); ax.set_ylabel("share of the split"); ax.set_title("composition of each split")
+    ax.legend(fontsize=6.5, loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=2, frameon=False)
+    ax = axes[1]
+    n = len(class_counts); x = np.arange(n); w = 0.4
+    ax.bar(x - w / 2, class_counts["train + val"].values, width=w, color=C_BLUE, label="train + val (the final training set)")
+    ax.bar(x + w / 2, class_counts["test"].values, width=w, color=C_ORANGE, label="test")
+    ax.set_xticks(x); ax.set_xticklabels(class_counts.index, rotation=90, fontsize=6)
+    ax.set_ylabel("photos"); ax.set_title(f"photos per invasive class ({n} classes, sorted by training count)"); ax.legend(fontsize=8, frameon=False)
+    fig.tight_layout(); fig.savefig(Path(out_dir) / "split_overview.png", bbox_inches="tight"); plt.close(fig)
+
+
+def plot_per_class_f1_compare(f1: pd.DataFrame, support: pd.Series, models: dict, macro: dict, out_dir: Path):
+    """Per-class F1 on test of every model side by side; ``f1`` has one column per model, rows sorted by test support."""
+    fig, ax = plt.subplots(figsize=(13, 4.2))
+    x = np.arange(len(f1)); w = 0.8 / len(models)
+    for j, s in enumerate(models):
+        ax.bar(x + (j - (len(models) - 1) / 2) * w, f1[s].values, width=w, color=models[s]["color"],
+               label=f"{models[s]['label']}: macro-F1 {macro[s]:.3f}")
+    ax.set_xticks(x); ax.set_xticklabels([f"{c} (n={support.get(c, 0)})" for c in f1.index], rotation=90, fontsize=6)
+    ax.set_ylim(0, 1.02); ax.set_ylabel("F1-score"); ax.set_title("per-class F1-score on the test set, classes sorted by frequency")
+    ax.legend(fontsize=8, frameon=False, loc="lower left")
+    fig.tight_layout(); _save(fig, out_dir, "per_class_f1_test.png")
+
+
+def plot_pr_roc_compare(probs: dict, metrics: dict, y: np.ndarray, models: dict, out_dir: Path):
+    """Binary invasive detection on test: PR and ROC curves of every model, dots at the validation threshold."""
+    n_invasive = next(iter(probs.values())).shape[1]
+    is_inv = y < n_invasive
+    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+    for s in models:
+        score = probs[s].max(1); m = metrics[s]; c = models[s]["color"]
+        pr_p, pr_r, _ = precision_recall_curve(is_inv, score); axes[0].plot(pr_r, pr_p, color=c, lw=2, label=f"{models[s]['label']} (AP {m['bin_ap_invasive']:.3f})")
+        axes[0].scatter([m["bin_recall_invasive"]], [m["bin_precision_invasive"]], color=c, edgecolors="black", s=45, zorder=4)
+        fpr, tpr, _ = roc_curve(is_inv, score); axes[1].plot(fpr, tpr, color=c, lw=2, label=f"{models[s]['label']} (AUROC {m['bin_auroc_invasive']:.3f})")
+        fpr_t = float((~is_inv & (score >= m["threshold"])).sum() / max((~is_inv).sum(), 1))
+        axes[1].scatter([fpr_t], [m["bin_recall_invasive"]], color=c, edgecolors="black", s=45, zorder=4)
+    axes[0].axhline(is_inv.mean(), color=C_GRAY, ls=":", lw=1); axes[0].set_xlabel("recall (invasive)"); axes[0].set_ylabel("precision (invasive)")
+    axes[0].set_xlim(0, 1); axes[0].set_ylim(0, 1.02); axes[0].set_title("binary invasiveness: precision-recall (dots = validation threshold)")
+    axes[0].legend(fontsize=7, loc="lower left")
+    axes[1].plot([0, 1], [0, 1], color=C_GRAY, ls=":", lw=1); axes[1].set_xlabel("false positive rate"); axes[1].set_ylabel("true-positive rate")
+    axes[1].set_title("binary invasiveness: ROC"); axes[1].legend(fontsize=7, loc="lower right")
+    fig.tight_layout(); _save(fig, out_dir, "pr_roc_test.png")
+
+
+def plot_errors_by_group(errors: pd.DataFrame, models: dict, out_dir: Path):
+    """Test error rate per group: invasive photos missed or misclassified, false positives in each not_invasive group."""
+    fig, ax = plt.subplots(figsize=(10, 3.8))
+    groups = [g for g in GROUP_ORDER if g in errors.index.get_level_values("group")]
+    x = np.arange(len(groups)); w = 0.8 / len(models)
+    for j, s in enumerate(models):
+        vals = [1 - errors.loc[(s, g), "correct"] for g in groups]
+        bars = ax.bar(x + (j - (len(models) - 1) / 2) * w, vals, width=w, color=models[s]["color"], label=models[s]["label"])
+        for b, v in zip(bars, vals):
+            ax.text(b.get_x() + b.get_width() / 2, v + 0.004, f"{v:.1%}", ha="center", fontsize=6)
+    first = next(iter(models))
+    ax.set_xticks(x); ax.set_xticklabels([f"{g}\n(n={int(errors.loc[(first, g), 'n'])})" for g in groups], fontsize=7)
+    ax.set_ylabel("error rate"); ax.set_title("test set error rate by group: missed or misclassified (invasive), false positives (the not_invasive groups)")
+    ax.legend(fontsize=8, frameon=False, loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=len(models))
+    ax.set_ylim(0, max(0.05, (1 - errors["correct"]).max() * 1.2 + 0.02))
+    fig.tight_layout(); fig.savefig(Path(out_dir) / "errors_by_group_test.png", bbox_inches="tight"); plt.close(fig)
+
+
+def plot_unseen(unseen: dict, models: dict, out_dir: Path):
+    """Share of test_unseen photos (all not_invasive) each model leaves unflagged."""
+    fig, ax = plt.subplots(figsize=(6.5, 3.2))
+    vals = [unseen[s]["top1_acc"] for s in models]
+    bars = ax.bar([models[s]["label"] for s in models], vals, color=[models[s]["color"] for s in models], width=0.6)
+    for b, v, s in zip(bars, vals, models):
+        ax.text(b.get_x() + b.get_width() / 2, v + 0.005, f"{v:.1%}\n({unseen[s]['n_flagged']} flagged)", ha="center", fontsize=8)
+    first = unseen[next(iter(models))]
+    ax.set_ylim(max(0, min(vals) - 0.1), 1.06); ax.set_ylabel("top-1 accuracy"); ax.tick_params(axis="x", labelsize=7)
+    ax.set_title(f"unseen species ({first['n']} photos of {first['n_species']} hold-out species, all not_invasive)", fontsize=9)
+    fig.tight_layout(); _save(fig, out_dir, "unseen_top1.png")

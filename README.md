@@ -53,3 +53,53 @@ A fine-tuned vision model that flags invasive plant species in iNaturalist photo
 ```
 
 ## Reproducing the results
+
+Every step runs from the repository root. The model steps need a GPU (times below are for a Colab T4).
+
+**1. Install.** Python 3.10 or later.
+```bash
+pip install -e .            # installs the invasive_clf package and its dependencies (see pyproject.toml)
+```
+The DINOv3 weights are gated on Hugging Face: accept the license on the
+[model page](https://huggingface.co/facebook/dinov3-vits16-pretrain-lvd1689m), then log in with `hf auth login`
+(or set `HF_TOKEN`). BioCLIP 2 needs no login.
+
+**2. Download the photos** listed in `data/splits/` (about 19,300 photos; see [`data/README.md`](data/README.md)).
+```bash
+python -m invasive_clf.data.download_images
+```
+Rebuilding the split itself from iNaturalist is optional: `python -m invasive_clf.data.build_dataset`
+(settings in `configs/dataset.yaml`).
+
+**3. The fine-tuned model: DINOv3 ViT-S/16** (settings in `configs/dinov3_vits16.yaml`).
+```bash
+# optional: the validation run that chose the epoch count and the threshold (train only, scored on val; ~70 min)
+python -m invasive_clf.train_dinov3 --config configs/dinov3_vits16.yaml --out-dir runs/dinov3_val --validate
+# the final model: train + val, full schedule (~70 min) -> runs/dinov3_final/final.pt
+python -m invasive_clf.train_dinov3 --config configs/dinov3_vits16.yaml --out-dir runs/dinov3_final
+```
+
+**4. The zero-shot model: BioCLIP 2 ViT-L/14** (settings in `configs/bioclip2_zeroshot.yaml`; nothing is trained).
+```bash
+# optional: score val and tune the threshold (~20 min)
+python -m invasive_clf.build_bioclip2 --config configs/bioclip2_zeroshot.yaml --out-dir runs/bioclip2_val --validate
+# the final model: the 4,573-name vocabulary and its text embeddings (a few minutes) -> runs/bioclip2_final/bioclip2_zeroshot.pt
+python -m invasive_clf.build_bioclip2 --config configs/bioclip2_zeroshot.yaml --out-dir runs/bioclip2_final
+```
+
+**5. The test evaluation**: scores `test.csv` and `test_unseen.csv` once with both models at their validation
+thresholds, times them, and writes every table and figure (~25 min).
+```bash
+python -m invasive_clf.evaluate --dinov3 runs/dinov3_final/final.pt \
+    --bioclip2 runs/bioclip2_final/bioclip2_zeroshot.pt --out-dir runs/final_test
+```
+Either model can be left out. The validation-vs-test table reads the validation metrics in
+`results/final_selection/final_models.json`.
+
+**Checking the pipeline without a GPU.** Each step has a smoke test that runs on the CPU in about a minute, with tiny
+untrained stand-in models and random photos (no downloads):
+```bash
+python tests/smoke_test_dinov3.py
+python tests/smoke_test_bioclip2.py
+python tests/smoke_test_evaluate.py
+```
