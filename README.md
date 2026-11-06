@@ -5,6 +5,7 @@ A fine-tuned vision model that flags invasive plant species in iNaturalist photo
 
 **Team: Craig Corsi, Jay Desai, Rachel Neville, and Apostolos Zournas**
 ---
+<img width="506" height="332" alt="newplotinvasive_vis" src="https://github.com/user-attachments/assets/5d2fc700-d371-4b83-a320-8465df37852d" />
 
 ## Overview
 **Problem.** Invasive plants degrade ecosystems across the Desert Southwest. They displace native vegetation, change fire regimes, and disrupt food websManagement costs rise sharply once an infestation is established, so identifying small, localized populations is a more cost effective management strategy. Field surveys cannot cover the land at the needed scale. Citizen-science platforms such as iNaturalist produce more observations. 
@@ -12,6 +13,7 @@ A fine-tuned vision model that flags invasive plant species in iNaturalist photo
 **Opportunity.** iNaturalist collects many community photos from volunteers. 
 
 ## Results at a glance
+
 
 ## Data
 - **Source:**[iNaturalist](https://www.inaturalist.org/) research-grade observations, Desert Southwest region (place_id 118341: Arizona, New Mexico, eastern California).
@@ -30,8 +32,10 @@ A fine-tuned vision model that flags invasive plant species in iNaturalist photo
 ├── EXPERIMENTS.md            # iteration-by-iteration log of accept/reject decisions
 ├── requirements.txt
 ├── configs/
-│   ├── base.yaml             # initial configuration
-│   └── siglip2_base_final.yaml
+│   └──  base.yaml           <img width="506" height="332" alt="newplotinvasive_vis" src="https://github.com/user-attachments/assets/987f973a-48f3-43ad-ae12-b473bcea46a5" />
+<img width="506" height="332" alt="newplotinvasive_vis" src="https://github.com/user-attachments/assets/8e535dfd-e958-4fcc-9b37-b0e8a015ca02" />
+<img width="506" height="332" alt="newplotinvasive_vis" src="https://github.com/user-attachments/assets/302daf12-f66b-40e1-947f-d8692e8226ef" />
+ # initial configuration
 ├── notebooks/                # exploration and experiment logs (read in order)
 │   ├── eda/                  # 01–02: preliminary dataset and exploratory analysis
 │   ├── data/                 # 03–04: species lists behind the dataset
