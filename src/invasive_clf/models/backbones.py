@@ -6,6 +6,7 @@ a module whose ``forward(x)`` maps a normalized image batch ``(B, 3, H, W)`` to 
 
 Only the backbone of the final fine-tuned model is kept here. The notebooks also have builders for PlantNet DINOv3,
 ResNets, ConvNeXt and SigLIP 2 (via ``timm``).
+BioCLIP 2's image tower, used frozen by the final zero-shot model, is in ``bioclip2.py``.
 
 DINOv3 ViT-S/16
 ---------------

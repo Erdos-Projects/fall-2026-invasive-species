@@ -20,6 +20,7 @@ dependencies = [
     "torchvision>=0.16",
     "torchmetrics",
     "transformers>=4.57.3",     # DINOv3 support
+    "open_clip_torch",          # BioCLIP 2
 ]
 
 [tool.setuptools.packages.find]

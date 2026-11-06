@@ -1,0 +1,22 @@
+# Final frozen model: BioCLIP 2 ViT-L/14 zero-shot over a 4,573-name vocabulary
+# (candidate bioclip2_zeroshot_full/00_baseline of notebook 16, chosen in notebook 18, tested in notebook 19).
+#
+# Nothing is trained. The settings are the ones notebook 16 recorded for this candidate in its config.json.
+# Used by:  python -m invasive_clf.build_bioclip2 --config configs/bioclip2_zeroshot.yaml
+
+model_name: bioclip2
+model_id: hf-hub:imageomics/bioclip-2       # open_clip checkpoint on Hugging Face (not gated)
+prompt: "a photo of {}"                     # the "scientific" prompt: "a photo of <scientific name>" (chosen on val in notebook 14)
+vocabulary: train+val classes + regional extras   # 441 + 4,132 = 4,573 names, rebuilt from data/splits (see models/bioclip2.py)
+
+# --- images: the deterministic evaluation transform of every notebook ---
+image_size: 224                             # Resize(256) then CenterCrop(224)
+val_resize: 256
+batch_size: 128
+num_workers: 2
+amp: true                                   # mixed precision on a GPU
+tta_hflip: true                             # score each photo and its mirror image, average the probabilities
+
+# --- decision rule ---
+threshold: 0.06                             # tuned on val in notebook 16 (macro-F1 over the 40 invasive classes)
+select_metric: macro_f1_invasive            # --validate: threshold tuning target
