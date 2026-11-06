@@ -205,4 +205,4 @@ python tests/smoke_test_evaluate.py
 The photos are from [iNaturalist](https://www.inaturalist.org/) and its observers, credited per photo in the
 `photo_attribution` column of the split tables. Pretrained models: DINOv3 (Meta AI - [Built with DINOv3](https://ai.meta.com/resources/models-and-libraries/dinov3-license/)), Pl@ntNet's DINOv3 fine-tune,
 BioCLIP 2 (Imageomics Institute), SigLIP 2 (Google), and the ResNet and ConvNeXt weights distributed with `timm`;
-each is used under the license on its model page.
+each is used under the license on its model page. BioCLIP 2 (Gu et al., “BioCLIP 2: Emergent Properties from Scaling Hierarchical Contrastive Learning,” NeurIPS 2025; model imageomics/bioclip-2, MIT License), accessed via Hugging Face and OpenCLIP.
